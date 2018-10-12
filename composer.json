@@ -1,0 +1,13 @@
+{
+    "name": "hearst-hatchery/graphql-php-client",
+    "description": "PHP Client for GraphQL",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Felton Vaughn",
+            "email": "fvaughn@hearst.com"
+        }
+    ],
+    "require": {}
+}
