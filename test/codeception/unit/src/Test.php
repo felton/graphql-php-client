@@ -1,7 +1,6 @@
 <?php
 class Test extends \Codeception\Test\Unit
 {
-
     protected function _before()
     {
     }
@@ -14,5 +13,4 @@ class Test extends \Codeception\Test\Unit
     public function testSomeFeature()
     {
     }
-
 }
