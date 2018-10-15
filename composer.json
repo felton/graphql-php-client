@@ -9,7 +9,9 @@
             "email": "fvaughn@hearst.com"
         }
     ],
-    "require": {},
+    "require": {
+        "guzzlehttp/guzzle": "^6.3"
+    },
     "require-dev": {
         "codeception/verify": "^1.0",
         "codeception/base": "^2.5",
@@ -18,7 +20,6 @@
     "autoload": {
         "psr-4": {
             "GraphQLClient\\": "src/"
-        }
     },
     "scripts": {
         "lint": "php-cs-fixer fix --diff --dry-run",
