@@ -20,6 +20,7 @@
     "autoload": {
         "psr-4": {
             "GraphQLClient\\": "src/"
+        }
     },
     "scripts": {
         "lint": "php-cs-fixer fix --diff --dry-run",
