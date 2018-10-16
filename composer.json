@@ -10,7 +10,9 @@
         }
     ],
     "require": {
-        "guzzlehttp/guzzle": "^6.3"
+        "guzzlehttp/guzzle": "^6.3",
+        "psr/log": "^1.0",
+        "symfony/options-resolver": "^4.1"
     },
     "require-dev": {
         "codeception/verify": "^1.0",
