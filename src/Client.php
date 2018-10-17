@@ -3,28 +3,58 @@
 namespace GraphQLClient;
 
 use GuzzleHttp\Client as GuzzleClient;
-
-use GuzzleHttp\Psr7\Request;
-
+use GraphQLClient\Traits\Request;
+use GraphQLClient\Traits\Response;
+use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class Client
 {
-    //use Request;
+    use Request;
+    use Response;
 
+    /**
+     * Guzzle HTTP client
+     *
+     * @var \GuzzleHttp\Client
+     */
     protected $httpClient;
 
+    /**
+     * GraphQL Server URL
+     *
+     * @var string
+     */
     protected $url;
 
-    protected $options;
+    /**
+     * Guzzle client options
+     *
+     * @var array
+     */
+    protected $options = [];
 
+    /**
+     * Client constructor
+     *
+     * @param string $url     Endpoint url
+     * @param array  $options client options
+     */
     public function __construct(string $url, array $options = [])
     {
-        $this->httpClient = new GuzzleClient();
-        $this->url = $url;
         $this->options = $this->resolveOptions($options);
+        $this->httpClient = $this->buildClient($this->options);
+        $this->url = $url;
     }
 
+    /**
+     * execute GraphQL query
+     *
+     * @param string $query     GraphQL Query
+     * @param array  $variables possible variables for use in query
+     *
+     * @return [type] [description]
+     */
     public function query(string $query = '', array $variables = [])
     {
         $queryData = [
@@ -32,15 +62,20 @@ class Client
             'variables' => $variables,
         ];
 
-        //$resp = $this->httpClient->request('POST', '', ['json' => $queryData]);
+        $request = $this->buildRequest($queryData);
 
-        $request = new Request('POST', $this->url);
+        $this->response = $this->httpClient->sendRequest($request);
 
-        $response = $this->httpClient->send($request, ['json' => $queryData]);
-
-        return $response->getBody()->getContents();
+        return $this->handleResponse();
     }
 
+    /**
+     * Set default client options
+     *
+     * @param array $options Guzzle Options
+     *
+     * @return array Array of resolved options
+     */
     protected function resolveOptions(array $options = [])
     {
         $resolver = new OptionsResolver();
@@ -53,5 +88,30 @@ class Client
         ]);
 
         return $resolver->resolve($options);
+    }
+
+    /**
+     * buildClient creates a guzzle client, but has support for using any
+     * httplug compatible client. @see http://httplug.io/
+     *
+     * @param array $options Client options
+     *
+     * @return \Http\Client\HttpClient HTTP client
+     */
+    protected function buildClient(array $options = [])
+    {
+        $guzzle = new GuzzleClient($options);
+
+        return new GuzzleAdapter($guzzle);
+    }
+
+    /**
+     * getter for client options
+     *
+     * @return array client options
+     */
+    public function getOptions()
+    {
+        return $this->options;
     }
 }

@@ -5,6 +5,11 @@ use Psr\Http\Message\ResponseInterface;
 
 trait Response
 {
+    /**
+     * [$response description]
+     *
+     * @var [type]
+     */
     protected $response;
 
     public function getResponse()
@@ -17,6 +22,6 @@ trait Response
 
     protected function handleResponse()
     {
-        return $this->getResponse();
+        return $this->getResponse()->getBody()->getContents();
     }
 }

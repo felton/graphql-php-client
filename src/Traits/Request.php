@@ -4,29 +4,31 @@ namespace GraphQLClient\Traits;
 
 use Http\Message\MessageFactory\GuzzleMessageFactory;
 use Psr\Http\Message\RequestInterface;
+use GraphQLClient\Exception\NotImplementedException;
 
 trait Request
 {
     /**
-     * [$request description]
+     *  query request object
      *
-     * @var [type]
+     * @var Psr\Http\Message\RequestInterface
      */
     protected $request;
 
     /**
-     * [$messageFactory description]
+     *  Request object factory
      *
-     * @var null
+     * @var \Http\Message\MessageFactory
      */
     protected $messageFactory = null;
 
     /**
-     * [buildRequest description]
+     * Build our query request
      *
-     * @param [type] $data [description]
+     * @param array $data Array with query and variables to send to a
+     *                    GraphQL Server
      *
-     * @return [type] [description]
+     * @return Psr\Http\Message\RequestInterface GraphQL Request
      */
     public function buildRequest($data) : RequestInterface
     {
@@ -36,18 +38,25 @@ trait Request
             createRequest($options['method'], $this->url, $options['headers']);
 
         if (($method = $options['method'] ?? false) && $method == 'GET') {
-            $uri = $request->getUri();
-            $request = $request->withUri($uri->withQuery(http_build_query($data)));
-        } else {
-            $request = $request->withBody(\GuzzleHttp\Psr7\stream_for(json_encode($data)));
+
+            /*
+             * Handling GET methods is not implemented yet.
+             *  example:
+             *  $uri = $request->getUri();
+             *  $request = $request->withUri($uri->withQuery(http_build_query($data)))
+             */
+            throw new NotImplementedException();
         }
+        $request = $request->withBody(\GuzzleHttp\Psr7\stream_for(json_encode($data)));
 
         return $request;
-
-        // return $this->getMessageFactory()->
-        //     createRequest($this->getMethod(), $this->getUrl(), $this->getHeaders());
     }
 
+    /**
+     * Get/Creates a MessageFactory
+     *
+     * @return Http\Message\MessageFactory\GuzzleMessageFactory message factory
+     */
     protected function getMessageFactory()
     {
         return $this->messageFactory ?? new GuzzleMessageFactory();
