@@ -53,7 +53,7 @@ class Client
      * @param string $query     GraphQL Query
      * @param array  $variables possible variables for use in query
      *
-     * @return [type] [description]
+     * @return string           Response text from a GraphQL server
      */
     public function query(string $query = '', array $variables = [])
     {
@@ -64,7 +64,11 @@ class Client
 
         $request = $this->buildRequest($queryData);
 
-        $this->response = $this->httpClient->sendRequest($request);
+        try {
+            $this->response = $this->httpClient->sendRequest($request);
+        } catch (\Http\Client\Exception\TransferException $e) {
+            throw new \RuntimeException($e->getMessage());
+        }
 
         return $this->handleResponse();
     }
@@ -74,7 +78,7 @@ class Client
      *
      * @param array $options Guzzle Options
      *
-     * @return array Array of resolved options
+     * @return array          Array of resolved options
      */
     protected function resolveOptions(array $options = [])
     {

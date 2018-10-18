@@ -1,18 +1,19 @@
-suites:
-  unit:
-    path: unit
-settings:
-  suite_class: \PHPUnit_Framework_TestSuite
-  memory_limit: 1024M
-  log: true
-  colors: true
-paths:
-  tests: codeception
-  output: codeception/_output
-  support: codeception/_support
-  data: codeception
 coverage:
   enabled: true
   include:
     - ../src/*
+namespace: GraphQLClient\Tests
+paths:
+  data: codeception
+  output: codeception/_output
+  support: codeception/_support
+  tests: codeception
+settings:
+  colors: true
+  log: true
+  memory_limit: 1024M
+  suite_class: \PHPUnit_Framework_TestSuite
+suites:
+  unit:
+    path: unit/src
 

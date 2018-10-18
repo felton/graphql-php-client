@@ -45,7 +45,7 @@ trait Request
              *  $uri = $request->getUri();
              *  $request = $request->withUri($uri->withQuery(http_build_query($data)))
              */
-            throw new NotImplementedException();
+            throw new NotImplementedException('Handling GET methods is not implemented yet');
         }
         $request = $request->withBody(\GuzzleHttp\Psr7\stream_for(json_encode($data)));
 

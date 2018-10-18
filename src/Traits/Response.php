@@ -6,9 +6,9 @@ use Psr\Http\Message\ResponseInterface;
 trait Response
 {
     /**
-     * [$response description]
+     * PSR7 Response from a GraphQL Server
      *
-     * @var [type]
+     * @var Psr\Http\Message\ResponseInterface
      */
     protected $response;
 
@@ -20,8 +20,19 @@ trait Response
         return false;
     }
 
+    /**
+     * Get body of response, or throw an exception.
+     *
+     * @return string Response body
+     */
     protected function handleResponse()
     {
-        return $this->getResponse()->getBody()->getContents();
+        $response = $this->getResponse();
+
+        if (!$response) {
+            throw new \Http\Message\Exception('Response does not exist.');
+        }
+
+        return $response->getBody()->getContents();
     }
 }
