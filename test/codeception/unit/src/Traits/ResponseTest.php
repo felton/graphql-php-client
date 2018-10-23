@@ -6,17 +6,10 @@ use GraphQLClient\Traits\Response as ResponseTrait;
 use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Codeception\Util\ReflectionHelper;
+use Codeception\Util\Stub;
 
 class ResponseTest extends \Codeception\Test\Unit
 {
-    protected function _before()
-    {
-    }
-
-    protected function _after()
-    {
-    }
-
     public function testResponseGetsHandled()
     {
         $response = $this->getMockBuilder(ResponseTrait::class)->setMockClassName('myResponse')->setMethods(['getResponse'])->getMockForTrait();
@@ -34,7 +27,7 @@ class ResponseTest extends \Codeception\Test\Unit
     {
         $response = $this->getMockBuilder(ResponseTrait::class)->setMethods(['getResponse'])->getMockForTrait();
 
-        \Codeception\Stub::update($response, [
+        Stub::update($response, [
             'getResponse' => false,
         ]);
 
@@ -45,13 +38,13 @@ class ResponseTest extends \Codeception\Test\Unit
     {
         $response = $this->getMockBuilder(ResponseTrait::class)->getMockForTrait();
 
-        \Codeception\Stub::update($response, [
+        Stub::update($response, [
             'response' => false,
         ]);
 
         verify($response->getResponse())->false();
 
-        \Codeception\Stub::update($response, [
+        Stub::update($response, [
             'response' => new GuzzleResponse(200),
         ]);
 

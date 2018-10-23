@@ -4,7 +4,7 @@ namespace GraphQLClient\Traits;
 
 use Http\Message\MessageFactory\GuzzleMessageFactory;
 use Psr\Http\Message\RequestInterface;
-use GraphQLClient\Exception\NotImplementedException;
+use GraphQLClient\Exception\NotYetImplementedException;
 
 trait Request
 {
@@ -34,19 +34,19 @@ trait Request
     {
         $options = $this->getOptions();
 
-        $request = $this->getMessageFactory()->
-            createRequest($options['method'], $this->url, $options['headers']);
-
         if (($method = $options['method'] ?? false) && $method == 'GET') {
-
             /*
              * Handling GET methods is not implemented yet.
              *  example:
              *  $uri = $request->getUri();
              *  $request = $request->withUri($uri->withQuery(http_build_query($data)))
              */
-            throw new NotImplementedException('Handling GET methods is not implemented yet');
+            throw new NotYetImplementedException('Handling GET methods is not implemented yet');
         }
+
+        $request = $this->getMessageFactory()->
+            createRequest($options['method'], $this->url, $options['headers']);
+
         $request = $request->withBody(\GuzzleHttp\Psr7\stream_for(json_encode($data)));
 
         return $request;

@@ -15,13 +15,11 @@ class ClientTest extends \Codeception\Test\Unit
 {
     protected $tester;
 
+    protected $_client;
+
     protected function _before()
     {
         $this->_client = new Client('foo.com');
-    }
-
-    protected function _after()
-    {
     }
 
     /**
@@ -195,15 +193,30 @@ class ClientTest extends \Codeception\Test\Unit
      */
     public function testGetters()
     {
-        $client = $this->make(Client::class);
-        verify(ReflectionHelper::readPrivateProperty($client, 'options'))->isEmpty();
-        verify(ReflectionHelper::readPrivateProperty($client, 'url'))->isEmpty();
+        $client = new Client('foo.com', []);
 
-        $client->setOptions([]);
-        $client->setUrl('foo');
+        verify($client->getOptions())->equals([
+            'method' => 'POST',
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+        ]);
 
-        verify(ReflectionHelper::readPrivateProperty($client, 'url'))->notEmpty();
-        verify($client->getUrl())->equals('foo');
-        verify(ReflectionHelper::readPrivateProperty($client, 'options'))->notEmpty();
+        $url = $this->_client->getUrl();
+
+        verify($url)->equals('foo.com');
+    }
+
+    /**
+     * @covers ::setOptions
+     * @covers ::setUrl
+     */
+    public function testSetters()
+    {
+        $client = new Client('foo.com', []);
+
+        $client->setUrl('bar.com');
+
+        verify($client->getUrl())->equals('bar.com');
     }
 }
