@@ -42,9 +42,9 @@ class Client
      */
     public function __construct(string $url, array $options = [])
     {
-        $this->options = $this->resolveOptions($options);
-        $this->httpClient = $this->buildClient($this->options);
-        $this->url = $url;
+        $this->setOptions($options);
+        $this->httpClient = $this->buildClient($this->getOptions());
+        $this->setUrl($url);
     }
 
     /**
@@ -59,8 +59,11 @@ class Client
     {
         $queryData = [
             'query' => $query,
-            'variables' => $variables,
         ];
+
+        if ($variables) {
+            $queryData['variables'] = $variables;
+        }
 
         $request = $this->buildRequest($queryData);
 
@@ -91,6 +94,7 @@ class Client
             ],
         ]);
 
+        // $resolver->setDefined(array_keys($options))
         return $resolver->resolve($options);
     }
 
@@ -117,5 +121,20 @@ class Client
     public function getOptions()
     {
         return $this->options;
+    }
+
+    public function setOptions(array $options = [])
+    {
+        $this->options = $this->resolveOptions($options);
+    }
+
+    public function setUrl($url = '')
+    {
+        $this->url = $url;
+    }
+
+    public function getUrl()
+    {
+        return $this->url;
     }
 }
