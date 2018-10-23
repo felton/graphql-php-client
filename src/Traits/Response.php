@@ -30,7 +30,7 @@ trait Response
         $response = $this->getResponse();
 
         if (!$response) {
-            throw new \Http\Message\Exception('Response does not exist.');
+            throw new \Http\Client\Exception\TransferException('Response does not exist.');
         }
 
         return $response->getBody()->getContents();
