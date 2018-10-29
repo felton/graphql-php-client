@@ -4,14 +4,6 @@ namespace GraphQLClient\Traits;
 
 trait Utils
 {
-    /**
-     * [hasHeader description]
-     *
-     * @param string $valueToCheck [description]
-     * @param string $headerName   [description]
-     *
-     * @return boolean [description]
-     */
     protected function hasHeader($valueToCheck = '', $headerName = 'Content-Type')
     {
         $headerValues = $this->getResponse()->getHeader($headerName);
@@ -19,13 +11,6 @@ trait Utils
         return in_array($valueToCheck, $headerValues);
     }
 
-    /**
-     * [encodeJson description]
-     *
-     * @param [type] $values [description]
-     *
-     * @return [type] [description]
-     */
     protected function encodeJson($values)
     {
         $json = json_encode($json);
@@ -36,14 +21,6 @@ trait Utils
         return $json;
     }
 
-    /**
-     * [decodeJson description]
-     *
-     * @param [type]  $json    [description]
-     * @param boolean $asArray [description]
-     *
-     * @return [type]  [description]
-     */
     protected function decodeJson($json, $asArray = false)
     {
         $values = json_decode($json, $asArray);
