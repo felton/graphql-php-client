@@ -61,4 +61,9 @@ trait Request
     {
         return $this->messageFactory ?? new GuzzleMessageFactory();
     }
+
+    protected function getRequest()
+    {
+        return $this->request;
+    }
 }
