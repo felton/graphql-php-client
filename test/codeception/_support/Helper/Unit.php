@@ -1,6 +1,7 @@
 <?php
 namespace GraphQLClient\Tests\Helper;
 
+use GuzzleHttp\Psr7\Response as GuzzleResponse;
 // here you can define custom actions
 // all public methods declared in helper class will be available in $I
 
@@ -38,5 +39,14 @@ class Unit extends \Codeception\Module
             ->getMockBuilder($className)
             ->setMethods($methodNames)
             ->getMockForTrait();
+    }
+
+    public function mockResponse($status = 200, $headers = [], $data = '', $asJson = false)
+    {
+        if($data) {
+            $data = $asJson ? json_encode($data) : $data;
+            $data = \GuzzleHttp\Psr7\stream_for($data);
+        }
+        return new GuzzleResponse($status, $headers, $data);
     }
 }
