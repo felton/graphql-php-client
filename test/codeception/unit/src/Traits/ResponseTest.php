@@ -6,7 +6,6 @@ use GraphQLClient\Traits\Response as ResponseTrait;
 use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Codeception\Util\ReflectionHelper;
-use Psr\Http\Message\RequestInterface;
 use GuzzleHttp\Psr7\Request as GuzzleRequest;
 use Codeception\Util\Stub;
 
@@ -23,34 +22,20 @@ class ResponseTest extends \Codeception\Test\Unit
     protected $tester;
 
     /**
-     * [$response description]
+     * Mocked Response class
      *
-     * @var [type]
+     * @var object
      */
     protected $response;
 
     /**
-     * [_before description]
+     * Actions to run before each test case
      */
     protected function _before()
     {
         $this->response = $this->tester->mockTrait(ResponseTrait::class, [
             'getResponse', 'getRequest', 'responseIsJSON',
         ]);
-
-        // $this->response->expects($this->any())
-        //     ->method('getResponse')
-        //     ->will($this->returnValue(123));
-
-        // \Codeception\Util\Debug::debug($this->response->getResponse());
-
-        // $this->response->expects($this->any())
-        //     ->method('getResponse')
-        //     ->will($this->returnValue(1234));
-
-        // \Codeception\Util\Debug::debug($this->response->getResponse());
-
-        \Codeception\Util\Debug::debug('Yo!!');
     }
 
     /**
@@ -66,8 +51,6 @@ class ResponseTest extends \Codeception\Test\Unit
             'response' => false,
         ]);
 
-        //\Codeception\Util\Debug::debug(\Codeception\Util\ReflectionHelper::readPrivateProperty($response, 'response'));
-
         verify($response->getResponse())->false();
 
         Stub::update($response, [
@@ -78,25 +61,13 @@ class ResponseTest extends \Codeception\Test\Unit
     }
 
     /**
-     * testResponseGetsHandled test needs to be refactored!
+     * Test that responses from GraphQL servers get processed
      *
      * @covers ::handleResponse
      * @dataProvider handleResponseProvider
      */
     public function testResponseGetsHandled($data, $expected)
     {
-        //$response = $this->tester->mockTrait(ResponseTrait::class, ['getResponse', 'getRequest', 'responseIsJSON']);
-
-        //$jsonData = ['data' => ['foo']];
-        //$jsonResponse = $this->tester->mockResponse(200, [], ['data' => ['foo']], true);
-
-        /*
-            @todo refactor!
-         $mResponse = $this->make(GuzzleResponse::class, [
-            'getBody' => $this->makeEmpty(StreamInterface::class, [
-                'getContents' => Stub::consecutive(['data' => ['foo']])
-            ])
-        ]);*/
         $response = $this->tester->mockResponse(200, [], $data, true);
         Stub::update($this->response, [
             'getResponse' => $response,
@@ -108,6 +79,9 @@ class ResponseTest extends \Codeception\Test\Unit
         verify($data)->equals($expected);
     }
 
+    /**
+     * Provider for `testResponseGetsHandled()`
+     */
     public function handleResponseProvider()
     {
         $data = ['data' => ['foo']];
@@ -125,17 +99,18 @@ class ResponseTest extends \Codeception\Test\Unit
     }
 
     /**
+     * Test that we throw an HttpException when no response is found
+     *
      * @expectedException \Http\Client\Exception\HttpException
      * @covers ::handleResponse
      */
     public function testHttpExceptionIsThrown()
     {
         $httpResponse = $this->tester->mockResponse(400);
-        $request = new GuzzleRequest('POST', 'foo.com');//$this->makeEmpty(RequestInterface::class);
-        // \Codeception\Util\Debug::debug((bool)($request instanceof Psr\Http\Message\RequestInterface));
+        $request = new GuzzleRequest('POST', 'foo.com');
 
-        //$this->response = $this->tester->mockTrait(ResponseTrait::class, ['getRequest']);
-
+        // Since `getRequest` isn't declared in this trait, using Codeception::Stub
+        // has issues, so lets use pure PHPUnit!
         $this->response->expects($this->any())
             ->method('getRequest')
             ->will($this->returnValue($request));
@@ -144,17 +119,12 @@ class ResponseTest extends \Codeception\Test\Unit
             ->method('getResponse')
             ->will($this->returnValue($httpResponse));
 
-        // Stub::update( $this->response, [
-        //     'response' => $httpResponse,
-        //     //'getRequest' => $request,
-        //     //'request' => $request,
-        // ]);
-
-        // \Codeception\Util\Debug::debug($request);
         ReflectionHelper::invokePrivateMethod($this->response, 'handleResponse');
     }
 
     /**
+     * Test that TransferException when we receive a unsuccessful response code
+     *
      * @expectedException \Http\Client\Exception\TransferException
      * @covers ::handleResponse
      */
@@ -164,6 +134,8 @@ class ResponseTest extends \Codeception\Test\Unit
     }
 
     /**
+     * Do we have an error in our query? Find out in the next QueryException!
+     *
      * @expectedException \GraphQLClient\Exception\QueryException
      * @covers ::handleResponse
      */
@@ -180,7 +152,8 @@ class ResponseTest extends \Codeception\Test\Unit
     }
 
     /**
-     * [providerthingy description]
+     * Test that we can detect if the response header is
+     * `Content-Type: application/json` and its variants
      *
      * @covers ::responseIsJSON
      * @dataProvider jsonResponseProvider
@@ -200,6 +173,9 @@ class ResponseTest extends \Codeception\Test\Unit
         verify($value)->equals($expected);
     }
 
+    /**
+     * dataProvider for `testresponseIsJSON`
+     */
     public function jsonResponseProvider()
     {
         return [
@@ -207,7 +183,7 @@ class ResponseTest extends \Codeception\Test\Unit
                 'header' => [
                     'name' => 'Content-Type',
                     'values' => 'application/json',
-                ], //['Content-Type' => 'application/json'],
+                ],
                 'expected' => true,
             ],
             'Two' => [
