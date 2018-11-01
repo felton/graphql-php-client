@@ -28,25 +28,36 @@ class Unit extends \Codeception\Module
     /**
      * Mock a trait class
      *
-     * @param string $className   Trait name
-     * @param array  $methodNames Methods to mock, if any
+     * @param string $className     Trait name
+     * @param array  $methodsToMock Methods to mock, if any
      *
      * @return object Mock object with trait `$className`
      */
-    public function mockTrait($className = '', array $methodNames = [])
+    public function mockTrait($className = '', array $methodsToMock = [])
     {
         return $this->unitTest
             ->getMockBuilder($className)
-            ->setMethods($methodNames)
+            ->setMethods($methodsToMock)
             ->getMockForTrait();
     }
 
-    public function mockResponse($status = 200, $headers = [], $data = '', $asJson = false)
+    public function mockResponse($status = 200, $headers = [], $data = '', $json = false)
     {
         if($data) {
-            $data = $asJson ? json_encode($data) : $data;
+            $data = $json ? json_encode($data) : $data;
             $data = \GuzzleHttp\Psr7\stream_for($data);
         }
         return new GuzzleResponse($status, $headers, $data);
+    }
+
+    public function setProperty($class, $property, $value)
+    {
+        $property = new \ReflectionProperty(get_class($class), $property);
+        $property->setAccessible(true);
+
+        $property->setValue($class, $value);
+
+
+        return $property;
     }
 }

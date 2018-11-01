@@ -22,6 +22,7 @@ trait Response
         if ($this->response instanceof ResponseInterface) {
             return $this->response;
         }
+
         return false;
     }
 
@@ -35,7 +36,7 @@ trait Response
      *
      * @return string Response body
      */
-    protected function handleResponse($asJson = true)
+    protected function handleResponse($json = true)
     {
         $response = $this->getResponse();
         $responseBody = '';
@@ -44,24 +45,23 @@ trait Response
             throw new TransferException('Response does not exist.');
         }
 
-        if ($response->getStatusCode() === 200) {
+        if ($response->getStatusCode() === 200 && $this->responseIsJSON()) {
             // Check for application/json header
             // Usually the error in this case comes from the json parser if text/html is returned
             // Let's check the response so we can be more clear with our error message
-            if ($this->responseIsJSON()) {
-                $responseBody = $response->getBody()->getContents();
-                $responseJSON = $this->decodeJson($responseBody);
-                $successfulData = $responseJSON['data'] ?? [];
+            $responseBody = $response->getBody()->getContents();
+            $responseJSON = $this->decodeJson($responseBody);
+            $successfulData = $responseJSON['data'] ?? [];
 
-                if ($errors = $responseJSON['errors'] ?? false) {
-                    // throw an exception with errors and any other successful data
-                    // returned before the error occurred, if any
-                    throw new QueryException($errors, $successfulData);
-                }
-
-                return $asJson ? $successfulData : $responseBody;
+            if ($errors = $responseJSON['errors'] ?? false) {
+                // throw an exception with errors and any other successful data
+                // returned before the error occurred, if any
+                throw new QueryException($errors, $successfulData);
             }
+
+            return $json ? $successfulData : $responseBody;
         }
+
         // Provide request and response to the user on any other error for inspection
         throw new HttpException('Bad content type', $this->getRequest(), $response);
     }
@@ -74,9 +74,5 @@ trait Response
     protected function responseIsJSON()
     {
         return $this->hasHeader('application/json');
-    }
-
-    protected function getResponseBody()
-    {
     }
 }
