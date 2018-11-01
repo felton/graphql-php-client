@@ -29,7 +29,7 @@ trait Response
     /**
      * Get body of response, or throw an exception.
      *
-     * @param boolean $asJson Return successful response as JSON
+     * @param boolean $json Return successful response as JSON
      *
      * @throws QueryException if there is an error in the query response.
      * @throws HttpException if the status code of the response is not successful.

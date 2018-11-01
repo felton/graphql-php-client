@@ -66,7 +66,7 @@ class ResponseTest extends \Codeception\Test\Unit
      * @covers ::handleResponse
      * @dataProvider handleResponseProvider
      */
-    public function testResponseGetsHandled($data, $expected)
+    public function testResponseGetsHandled($data, $expected, $json = true)
     {
         $response = $this->tester->mockResponse(200, [], $data, true);
         Stub::update($this->_response, [
@@ -74,7 +74,7 @@ class ResponseTest extends \Codeception\Test\Unit
             'responseIsJSON' => true,
         ]);
 
-        $data = ReflectionHelper::invokePrivateMethod($this->_response, 'handleResponse');
+        $data = ReflectionHelper::invokePrivateMethod($this->_response, 'handleResponse', [$json]);
 
         verify($data)->equals($expected);
     }
@@ -93,7 +93,8 @@ class ResponseTest extends \Codeception\Test\Unit
             ],
             'Response as Text' => [
                 'response' => $data,
-                'expected' => ['foo'],
+                'expected' => '{"data":["foo"]}',
+                'json' => false,
             ],
         ];
     }
