@@ -30,7 +30,7 @@ class QueryException extends \RuntimeException
         $this->errorData = $errorData;
         $this->successfulData = $successfulData;
 
-        $messages = implode(' ', $this->errorColumn('message'));
+        $messages = implode(' - ', $this->errorColumn('message'));
         parent::__construct($messages);
     }
 

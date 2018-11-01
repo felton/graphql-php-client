@@ -26,14 +26,14 @@ class ResponseTest extends \Codeception\Test\Unit
      *
      * @var object
      */
-    protected $response;
+    protected $_response;
 
     /**
      * Actions to run before each test case
      */
     protected function _before()
     {
-        $this->response = $this->tester->mockTrait(ResponseTrait::class, [
+        $this->_response = $this->tester->mockTrait(ResponseTrait::class, [
             'getResponse', 'getRequest', 'responseIsJSON',
         ]);
     }
@@ -69,12 +69,12 @@ class ResponseTest extends \Codeception\Test\Unit
     public function testResponseGetsHandled($data, $expected)
     {
         $response = $this->tester->mockResponse(200, [], $data, true);
-        Stub::update($this->response, [
+        Stub::update($this->_response, [
             'getResponse' => $response,
             'responseIsJSON' => true,
         ]);
 
-        $data = ReflectionHelper::invokePrivateMethod($this->response, 'handleResponse');
+        $data = ReflectionHelper::invokePrivateMethod($this->_response, 'handleResponse');
 
         verify($data)->equals($expected);
     }
@@ -111,15 +111,15 @@ class ResponseTest extends \Codeception\Test\Unit
 
         // Since `getRequest` isn't declared in this trait, using Codeception::Stub
         // has issues, so lets use pure PHPUnit!
-        $this->response->expects($this->any())
+        $this->_response->expects($this->any())
             ->method('getRequest')
             ->will($this->returnValue($request));
 
-        $this->response->expects($this->any())
+        $this->_response->expects($this->any())
             ->method('getResponse')
             ->will($this->returnValue($httpResponse));
 
-        ReflectionHelper::invokePrivateMethod($this->response, 'handleResponse');
+        ReflectionHelper::invokePrivateMethod($this->_response, 'handleResponse');
     }
 
     /**
@@ -130,7 +130,7 @@ class ResponseTest extends \Codeception\Test\Unit
      */
     public function testTransferExceptionIsThrown()
     {
-        ReflectionHelper::invokePrivateMethod($this->response, 'handleResponse');
+        ReflectionHelper::invokePrivateMethod($this->_response, 'handleResponse');
     }
 
     /**
@@ -143,12 +143,12 @@ class ResponseTest extends \Codeception\Test\Unit
     {
         $data = ['errors' => ['foo']];
         $httpResponse = $this->tester->mockResponse(200, [], $data, true);
-        Stub::update($this->response, [
+        Stub::update($this->_response, [
             'getResponse' => $httpResponse,
             'responseIsJSON' => true,
         ]);
 
-        ReflectionHelper::invokePrivateMethod($this->response, 'handleResponse');
+        ReflectionHelper::invokePrivateMethod($this->_response, 'handleResponse');
     }
 
     /**
@@ -179,14 +179,21 @@ class ResponseTest extends \Codeception\Test\Unit
     public function jsonResponseProvider()
     {
         return [
-            'One' => [
+            'Full headers' => [
                 'header' => [
                     'name' => 'Content-Type',
                     'values' => 'application/json',
                 ],
                 'expected' => true,
             ],
-            'Two' => [
+            'Additional UTF-8 charset appended' => [
+                'header' => [
+                    'name' => 'Content-Type',
+                    'values' => 'application/json; charset=UTF-8',
+                ],
+                'expected' => true,
+            ],
+            'No headers' => [
                 'header' => [
                     'name' => '',
                     'values' => '',

@@ -14,7 +14,7 @@ trait Utils
      *
      * @return boolean If header name and value exist
      */
-    protected function hasHeader($valueToCheck = '', $headerName = 'Content-Type')
+    public function hasHeader($valueToCheck = '', $headerName = 'Content-Type')
     {
         $headerValues = $this->getResponse()->getHeader($headerName);
 
@@ -35,9 +35,9 @@ trait Utils
      *
      * @return string/boolean Returns a JSON encoded string on success or FALSE on failure
      */
-    protected function encodeJson($values)
+    public function encodeJson($values)
     {
-        $json = json_encode($json);
+        $json = json_encode($values);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \UnexpectedValueException('JSON encoding error: ' . json_last_error_msg());
         }
@@ -55,7 +55,7 @@ trait Utils
      *
      * @return mixed  Value encoded in json in either object, or array
      */
-    protected function decodeJson($json, $asArray = true)
+    public function decodeJson($json, $asArray = true)
     {
         $values = json_decode($json, $asArray);
         if (json_last_error() !== JSON_ERROR_NONE) {
