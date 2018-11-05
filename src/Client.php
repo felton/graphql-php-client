@@ -65,10 +65,10 @@ class Client
             $queryData['variables'] = $variables;
         }
 
-        $request = $this->buildRequest($queryData);
+        $this->request = $this->buildRequest($queryData);
 
         try {
-            $this->response = $this->httpClient->sendRequest($request);
+            $this->response = $this->httpClient->sendRequest($this->request);
         } catch (\Http\Client\Exception\TransferException $e) {
             throw new \RuntimeException($e->getMessage());
         }

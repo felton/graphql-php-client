@@ -61,4 +61,14 @@ trait Request
     {
         return $this->messageFactory ?? new GuzzleMessageFactory();
     }
+
+    /**
+     * Returns the created HTTP request
+     *
+     * @return mixed Psr\Http\Message\RequestInterface or null if not created
+     */
+    protected function getRequest()
+    {
+        return $this->request;
+    }
 }
