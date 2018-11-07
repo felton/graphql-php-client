@@ -2,12 +2,15 @@
 
 namespace GraphQLClient\Traits;
 
-use Http\Message\MessageFactory\GuzzleMessageFactory;
-use Psr\Http\Message\RequestInterface;
 use GraphQLClient\Exception\NotYetImplementedException;
+use Http\Message\RequestFactory;
+use Http\Discovery\MessageFactoryDiscovery;
+use Psr\Http\Message\RequestInterface;
 
 trait Request
 {
+    use Stream;
+
     /**
      *  query request object
      *
@@ -18,9 +21,9 @@ trait Request
     /**
      *  Request object factory
      *
-     * @var \Http\Message\MessageFactory
+     * @var \Http\Message\RequestFactory
      */
-    protected $messageFactory = null;
+    protected $requestFactory = null;
 
     /**
      * Build our query request
@@ -44,22 +47,27 @@ trait Request
             throw new NotYetImplementedException('Handling GET methods is not implemented yet');
         }
 
-        $request = $this->getMessageFactory()->
+        $request = $this->getRequestFactory()->
             createRequest($options['method'], $this->url, $options['headers']);
 
-        $request = $request->withBody(\GuzzleHttp\Psr7\stream_for(json_encode($data)));
+        $body = $this->getStreamFactory()->createStream($this->encodeJson($data));
+
+        $request = $request->withBody($body);
 
         return $request;
     }
 
     /**
-     * Get/Creates a MessageFactory
+     * Get/Creates a RequestFactory
      *
-     * @return Http\Message\MessageFactory\GuzzleMessageFactory message factory
+     * `MessageFactoryDiscovery` will find the appropriate RequestFactory or MessageFactory
+     * we only need the factory for Requests.
+     *
+     * @return Http\Message\RequestFactory message factory
      */
-    protected function getMessageFactory()
+    protected function getRequestFactory() : RequestFactory
     {
-        return $this->messageFactory ?? new GuzzleMessageFactory();
+        return $this->messageFactory ?? MessageFactoryDiscovery::find();
     }
 
     /**
@@ -67,7 +75,7 @@ trait Request
      *
      * @return mixed Psr\Http\Message\RequestInterface or null if not created
      */
-    protected function getRequest()
+    public function getRequest()
     {
         return $this->request;
     }
