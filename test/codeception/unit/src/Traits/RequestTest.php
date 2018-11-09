@@ -2,12 +2,12 @@
 
 namespace GraphQLClient\Tests\Traits;
 
+use Codeception\Util\ReflectionHelper;
+use Codeception\Util\Stub;
 use GraphQLClient\Traits\Request;
 use GuzzleHttp\Psr7\Request as GuzzleRequest;
+use Http\Message\RequestFactory;
 use Psr\Http\Message\RequestInterface;
-use \Http\Message\MessageFactory;
-use Codeception\Util\Stub;
-use Codeception\Util\ReflectionHelper;
 
 /**
  * @coversDefaultClass GraphQLClient\Traits\Request
@@ -22,14 +22,14 @@ class RequestTest extends \Codeception\Test\Unit
     protected $tester;
 
     /**
-     * Mocked Request class
+     * Mocked class that uses Request trait
      *
      * @var object
      */
     protected $_request;
 
     /**
-     * Mocked MessageFactory
+     * Mocked RequestFactory
      *
      * @var object
      */
@@ -40,11 +40,11 @@ class RequestTest extends \Codeception\Test\Unit
      */
     protected function _before()
     {
-        $this->_request = $this->getMockBuilder(Request::class)
-                               ->setMethods(['getMessageFactory', 'getOptions'])
-                               ->getMockForTrait();
+        $this->_request = $this->tester->mockTrait(Request::class, [
+            'getRequestFactory', 'getOptions', 'encodeJson', 'getStreamFactory',
+        ]);
 
-        $this->_messageFactory = $this->makeEmpty(MessageFactory::class, [
+        $this->_messageFactory = $this->makeEmpty(RequestFactory::class, [
                 'createRequest' => new GuzzleRequest('POST', 'foo.com'), ]);
     }
 
@@ -55,21 +55,33 @@ class RequestTest extends \Codeception\Test\Unit
      */
     public function testbuildRequestBuildsRequest()
     {
-        $request = $this->_request;
+        $options = ['method' => 'POST', 'headers' => ['header1' => 'bar']];
+
+        $streamFactory = $this->makeEmpty(\Http\Message\StreamFactory::class, [
+                'createStream' => \GuzzleHttp\Psr7\stream_for('some-data'), ]);
 
         // setting method return values using PHPUnit since mixing with Stub::update causes issues
-        $request->expects($this->any())
+        $this->_request->expects($this->any())
             ->method('getOptions')
-            ->will($this->returnValue(['method' => 'POST', 'headers' => ['header1' => 'bar']]));
+            ->will($this->returnValue($options));
 
-        Stub::update($request, [
+        /*
+         * Mock the rest using `Stub::update`
+         * This shouldn't completely work, but the code above might have fixed something.
+         * @todo Investigate this.
+         */
+        Stub::update($this->_request, [
             'url' => 'foo.com',
-            'getMessageFactory' => $this->_messageFactory,
+            'encodeJson' => self::Once(),
+            'getRequestFactory' => $this->_messageFactory,
+            'getStreamFactory' => $streamFactory,
         ]);
 
-        $r = $request->buildRequest(['foo']);
+        $request = $this->_request->buildRequest(['some-data']);
 
-        verify($r)->isInstanceOf(RequestInterface::class);
+        verify($request)->isInstanceOf(RequestInterface::class);
+
+        verify($request->getBody()->getContents())->equals('some-data');
     }
 
     /**
@@ -81,40 +93,37 @@ class RequestTest extends \Codeception\Test\Unit
      */
     public function testBuildRequestThrowsOnGET()
     {
-        $request = $this->_request;
-
         // setting method return values using PHPUnit since mixing with Stub::update causes issues
-        $request->expects($this->any())
+        $this->_request->expects($this->any())
             ->method('getOptions')
             ->will($this->returnValue(['method' => 'GET']));
 
-        $request->buildRequest(['foo']);
+        $this->_request->buildRequest(['foo']);
     }
 
     /**
-     * Test that we return a messageFactory
+     * Test that we return a RequestFactory
      *
-     * @covers ::getMessageFactory
+     * @covers ::getRequestFactory
      */
-    public function testMessageFactory()
+    public function testRequestFactory()
     {
-        // create empty trait mock since _request has an empty `getMessageFactory`
-        $request = $this->getMockBuilder(Request::class)
-                               ->getMockForTrait();
+        // create an empty trait mock since $this->_request has an empty `getRequestFactory`
+        $request = $this->tester->mockTrait(Request::class);
 
         Stub::update($request, [
-            'messageFactory' => null,
+            'requestFactory' => null,
         ]);
 
-        $factory = ReflectionHelper::invokePrivateMethod($request, 'getMessageFactory');
+        $factory = ReflectionHelper::invokePrivateMethod($request, 'getRequestFactory');
 
-        verify($factory)->isInstanceOf(MessageFactory::class);
+        verify($factory)->isInstanceOf(RequestFactory::class);
 
         Stub::update($request, [
-            'messageFactory' => $this->_messageFactory,
+            'requestFactory' => $this->_messageFactory,
         ]);
 
-        $factory = ReflectionHelper::invokePrivateMethod($request, 'getMessageFactory');
+        $factory = ReflectionHelper::invokePrivateMethod($request, 'getRequestFactory');
 
         verify($factory)->equals($this->_messageFactory);
     }

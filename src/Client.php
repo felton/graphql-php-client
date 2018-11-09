@@ -2,9 +2,9 @@
 
 namespace GraphQLClient;
 
-use GuzzleHttp\Client as GuzzleClient;
 use GraphQLClient\Traits\Request;
 use GraphQLClient\Traits\Response;
+use GuzzleHttp\Client as GuzzleClient;
 use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 

@@ -2,11 +2,11 @@
 
 namespace GraphQLClient\Tests;
 
+use Codeception\Util\ReflectionHelper;
 use GraphQLClient\Client;
 use Http\Mock\Client as MockClient;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\RequestInterface;
-use Codeception\Util\ReflectionHelper;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  *  @coversDefaultClass GraphQLClient\Client

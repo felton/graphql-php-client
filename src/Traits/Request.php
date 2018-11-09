@@ -3,8 +3,8 @@
 namespace GraphQLClient\Traits;
 
 use GraphQLClient\Exception\NotYetImplementedException;
-use Http\Message\RequestFactory;
 use Http\Discovery\MessageFactoryDiscovery;
+use Http\Message\RequestFactory;
 use Psr\Http\Message\RequestInterface;
 
 trait Request
@@ -67,7 +67,7 @@ trait Request
      */
     protected function getRequestFactory() : RequestFactory
     {
-        return $this->messageFactory ?? MessageFactoryDiscovery::find();
+        return $this->requestFactory ?? MessageFactoryDiscovery::find();
     }
 
     /**

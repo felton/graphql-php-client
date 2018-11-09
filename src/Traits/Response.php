@@ -58,7 +58,6 @@ trait Response
                 // returned before the error occurred, if any
                 throw new QueryException($errors, $successfulData);
             }
-
             return $json ? $successfulData : $responseBody;
         }
 
