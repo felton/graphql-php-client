@@ -19,16 +19,19 @@ class QueryException extends \RuntimeException
      */
     protected $successfulData = [];
 
+    protected $responseBody = '';
+
     /**
      * QueryException constructor
      *
      * @param array $errorData      Errors returned from a GraphQL query request
      * @param array $successfulData Any executed data returned before the error occurred
      */
-    public function __construct($errorData, $successfulData = [])
+    public function __construct($errorData, $successfulData = [], $responseBody = '')
     {
         $this->errorData = $errorData;
         $this->successfulData = $successfulData;
+        $this->responseBody = $responseBody;
 
         $messages = implode(' - ', $this->errorColumn('message'));
         parent::__construct($messages);
@@ -72,6 +75,11 @@ class QueryException extends \RuntimeException
     public function getData()
     {
         return $this->successfulData;
+    }
+
+    public function getResponseBody()
+    {
+        return $this->responseBody;
     }
 
     /**

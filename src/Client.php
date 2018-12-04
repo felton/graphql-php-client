@@ -4,7 +4,6 @@ namespace GraphQLClient;
 
 use GraphQLClient\Traits\Request;
 use GraphQLClient\Traits\Response;
-use GuzzleHttp\Client as GuzzleClient;
 use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -43,7 +42,7 @@ class Client
     public function __construct(string $url, array $options = [])
     {
         $this->setOptions($options);
-        $this->httpClient = $this->buildClient($this->getOptions());
+        $this->httpClient = $this->buildClient();
         $this->setUrl($url);
     }
 
@@ -73,13 +72,24 @@ class Client
             throw new \RuntimeException($e->getMessage());
         }
 
-        return $this->handleResponse();
+        return $this->handleResponse($this->getOptions()['json']);
+    }
+
+    /**
+     * buildClient creates a guzzle client, but has support for using any
+     * httplug compatible client. @see http://httplug.io/
+     *
+     * @return \Http\Client\HttpClient HTTP client
+     */
+    protected function buildClient()
+    {
+        return new GuzzleAdapter();
     }
 
     /**
      * Set default client options
      *
-     * @param array $options Guzzle Options
+     * @param array $options Client Options
      *
      * @return array          Array of resolved options
      */
@@ -87,30 +97,30 @@ class Client
     {
         $resolver = new OptionsResolver();
 
-        $resolver->setDefaults([
-            'method' => 'POST',
-            'headers' => [
-                'Content-Type' => 'application/json',
-            ],
-        ]);
+        $resolver
+            ->setDefaults([
+                'request' => function (OptionsResolver $requestResolver) {
+                    $requestResolver
+                        ->setDefaults([
+                           'method' => 'POST',
+                            'headers' => [
+                                'Content-Type' => 'application/json',
+                            ],
+                        ])
+                        ->setAllowedValues('method', ['POST', 'GET'])
+                        ->setAllowedTypes('headers', 'array');
+                },
+                'client' => function (OptionsResolver $clientResolver) {
+                },
+                'json' => true,
 
-        // $resolver->setDefined(array_keys($options))
+            ])
+            ->setAllowedTypes('json', 'bool');
+
+        $this->configureOptions($resolver);
+
+        // Resolve all options here
         return $resolver->resolve($options);
-    }
-
-    /**
-     * buildClient creates a guzzle client, but has support for using any
-     * httplug compatible client. @see http://httplug.io/
-     *
-     * @param array $options Client options
-     *
-     * @return \Http\Client\HttpClient HTTP client
-     */
-    protected function buildClient(array $options = [])
-    {
-        $guzzle = new GuzzleClient($options);
-
-        return new GuzzleAdapter($guzzle);
     }
 
     /**
@@ -136,5 +146,14 @@ class Client
     public function getUrl()
     {
         return $this->url;
+    }
+
+    /**
+     * [configureOptions description]
+     *
+     * @param OptionsResolver $resolver [description]
+     */
+    protected function configureOptions(OptionsResolver $resolver) : void
+    {
     }
 }

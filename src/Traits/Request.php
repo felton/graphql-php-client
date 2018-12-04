@@ -35,7 +35,7 @@ trait Request
      */
     public function buildRequest($data) : RequestInterface
     {
-        $options = $this->getOptions();
+        $options = $this->getOptions()['request'];
 
         if (($method = $options['method'] ?? false) && $method == 'GET') {
             /*
