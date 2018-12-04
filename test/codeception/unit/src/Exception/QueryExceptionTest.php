@@ -56,9 +56,16 @@ class QueryExceptionTest extends \Codeception\Test\Unit
         ],
     ];
 
+    /**
+     * Response body
+     *
+     * @var string
+     */
+    protected $responseBody = '{"data":{"content":["id":123]}}';
+
     protected function _before()
     {
-        $this->exception = new QueryException($this->errors, $this->data);
+        $this->exception = new QueryException($this->errors, $this->data, $this->responseBody);
     }
 
     /**
@@ -116,5 +123,15 @@ class QueryExceptionTest extends \Codeception\Test\Unit
     public function testData()
     {
         verify($this->exception->getData())->equals($this->data);
+    }
+
+    /**
+     * Return response body
+     *
+     * @covers ::getResponseBody
+     */
+    public function testResponseBody()
+    {
+        verify($this->exception->getResponseBody())->equals($this->responseBody);
     }
 }

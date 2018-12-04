@@ -42,7 +42,7 @@ class Client
     public function __construct(string $url, array $options = [])
     {
         $this->setOptions($options);
-        $this->httpClient = $this->buildClient();
+        $this->httpClient = $this->buildClient($this->getOptions()['client'] ?? []);
         $this->setUrl($url);
     }
 
@@ -81,13 +81,21 @@ class Client
      *
      * @return \Http\Client\HttpClient HTTP client
      */
-    protected function buildClient()
+    protected function buildClient(array $options = [])
     {
-        return new GuzzleAdapter();
+        return GuzzleAdapter::createWithConfig($options);
     }
 
     /**
      * Set default client options
+     *
+     * Client Options:
+     * `request` - An array that has a `method` and `headers` element,
+     *             these get sent with the request
+     * `client` - An array that gets sent to the Guzzle client to be configured
+     *            This will be removed in the next release
+     * `json`   - Flag that determines whether an array or text is returned from a
+     *            response
      *
      * @param array $options Client Options
      *
@@ -110,13 +118,13 @@ class Client
                         ->setAllowedValues('method', ['POST', 'GET'])
                         ->setAllowedTypes('headers', 'array');
                 },
-                'client' => function (OptionsResolver $clientResolver) {
-                },
                 'json' => true,
-
             ])
-            ->setAllowedTypes('json', 'bool');
+            ->setDefined('client')
+            ->setAllowedTypes('json', 'bool')
+            ->setAllowedTypes('client', 'array');
 
+        // Configure options, if necessary
         $this->configureOptions($resolver);
 
         // Resolve all options here
@@ -133,25 +141,41 @@ class Client
         return $this->options;
     }
 
+    /**
+     * setter for client options
+     *
+     * @param array $options client options
+     */
     public function setOptions(array $options = [])
     {
         $this->options = $this->resolveOptions($options);
     }
 
+    /**
+     * setter for client url
+     *
+     * @param string $url endpoint
+     */
     public function setUrl($url = '')
     {
         $this->url = $url;
     }
 
+    /**
+     * getter for url endpoint
+     *
+     * @return string current url endpoint
+     */
     public function getUrl()
     {
         return $this->url;
     }
 
     /**
-     * [configureOptions description]
+     * Split option configuration into its own method so sub-classes can override
+     * if necessary.
      *
-     * @param OptionsResolver $resolver [description]
+     * @param OptionsResolver $resolver OptionsResolver from resolveOptions()
      */
     protected function configureOptions(OptionsResolver $resolver) : void
     {

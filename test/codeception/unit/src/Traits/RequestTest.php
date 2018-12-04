@@ -55,7 +55,7 @@ class RequestTest extends \Codeception\Test\Unit
      */
     public function testbuildRequestBuildsRequest()
     {
-        $options = ['method' => 'POST', 'headers' => ['header1' => 'bar']];
+        $options = ['request' => ['method' => 'POST', 'headers' => ['header1' => 'bar']]];
 
         $streamFactory = $this->makeEmpty(\Http\Message\StreamFactory::class, [
                 'createStream' => \GuzzleHttp\Psr7\stream_for('some-data'), ]);
@@ -96,7 +96,7 @@ class RequestTest extends \Codeception\Test\Unit
         // setting method return values using PHPUnit since mixing with Stub::update causes issues
         $this->_request->expects($this->any())
             ->method('getOptions')
-            ->will($this->returnValue(['method' => 'GET']));
+            ->will($this->returnValue(['request' => ['method' => 'GET']]));
 
         $this->_request->buildRequest(['foo']);
     }

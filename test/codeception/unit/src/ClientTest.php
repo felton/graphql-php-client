@@ -40,6 +40,7 @@ class ClientTest extends \Codeception\Test\Unit
 
     /**
      * @covers ::resolveOptions
+     * @covers ::configureOptions
      * @dataProvider optionProvider
      */
     public function testOptionsGetResolved($options, $expected)
@@ -52,15 +53,18 @@ class ClientTest extends \Codeception\Test\Unit
     public function optionProvider()
     {
         $defaults = $defaultGET = $defaultGraphQL = [
-            'method' => 'POST',
-            'headers' => [
-                'Content-Type' => 'application/json',
+            'request' => [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
             ],
+            'json' => true,
         ];
 
-        $defaultGET['method'] = 'GET';
+        $defaultGET['request']['method'] = 'GET';
 
-        $defaultGraphQL['headers']['Content-Type'] = 'application/graphql';
+        $defaultGraphQL['request']['headers']['Content-Type'] = 'application/graphql';
 
         return [
             'Empty options' => [
@@ -68,15 +72,15 @@ class ClientTest extends \Codeception\Test\Unit
                 'expected' => $defaults,
             ],
             'Single Option same default' => [
-                'options' => ['method' => 'POST'],
+                'options' => ['request' => ['method' => 'POST']],
                 'expected' => $defaults,
             ],
             'Single option, GET method' => [
-                'options' => ['method' => 'GET'],
+                'options' => ['request' => ['method' => 'GET']],
                 'expected' => $defaultGET,
             ],
             'Single option, new content-type' => [
-                'options' => ['headers' => ['Content-Type' => 'application/graphql']],
+                'options' => ['request' => ['headers' => ['Content-Type' => 'application/graphql']]],
                 'expected' => $defaultGraphQL,
             ],
         ];
@@ -88,8 +92,7 @@ class ClientTest extends \Codeception\Test\Unit
     public function testClientGetsBuilt()
     {
         $client = $this->make('GraphQLClient\\Client', [
-            'buildClient' => self::Once(function ($options) {
-            }),
+            'buildClient' => self::Once(),
         ]);
 
         $method = new \ReflectionMethod(get_class($client), 'buildClient');
@@ -114,6 +117,7 @@ class ClientTest extends \Codeception\Test\Unit
             'buildRequest' => $this->makeEmpty(RequestInterface::class),
             'httpClient' => $mockHttpClient,
             'handleResponse' => self::Once(),
+            'getOptions' => ['json' => true],
         ]);
 
         $client->query('foo');
@@ -139,6 +143,7 @@ class ClientTest extends \Codeception\Test\Unit
             },
             'httpClient' => $mockHttpClient,
             'handleResponse' => self::Once(),
+            'getOptions' => ['json' => true],
         ]);
 
         $client->query($query, $variables);
@@ -196,10 +201,13 @@ class ClientTest extends \Codeception\Test\Unit
         $client = new Client('foo.com', []);
 
         verify($client->getOptions())->equals([
-            'method' => 'POST',
-            'headers' => [
-                'Content-Type' => 'application/json',
+            'request' => [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
             ],
+            'json' => true,
         ]);
 
         $url = $this->_client->getUrl();
