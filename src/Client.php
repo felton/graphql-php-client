@@ -105,24 +105,22 @@ class Client
     {
         $resolver = new OptionsResolver();
 
-        $resolver
-            ->setDefaults([
-                'request' => function (OptionsResolver $requestResolver) {
-                    $requestResolver
-                        ->setDefaults([
-                           'method' => 'POST',
-                            'headers' => [
-                                'Content-Type' => 'application/json',
-                            ],
-                        ])
-                        ->setAllowedValues('method', ['POST', 'GET'])
-                        ->setAllowedTypes('headers', 'array');
-                },
-                'json' => true,
-            ])
-            ->setDefined('client')
-            ->setAllowedTypes('json', 'bool')
-            ->setAllowedTypes('client', 'array');
+        $resolver->setDefaults([
+            'request' => function (OptionsResolver $requestResolver) {
+                $requestResolver->setDefaults([
+                   'method' => 'POST',
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                    ],
+                ])
+                ->setAllowedValues('method', ['POST', 'GET'])
+                ->setAllowedTypes('headers', 'array');
+            },
+            'json' => true,
+        ])
+        ->setDefined('client')
+        ->setAllowedTypes('json', 'bool')
+        ->setAllowedTypes('client', 'array');
 
         // Configure options, if necessary
         $this->configureOptions($resolver);

@@ -6,6 +6,7 @@ use Codeception\Util\ReflectionHelper;
 use Codeception\Util\Stub;
 use GraphQLClient\Traits\Request;
 use GuzzleHttp\Psr7\Request as GuzzleRequest;
+use Http\Message\MessageFactory\GuzzleMessageFactory;
 use Http\Message\RequestFactory;
 use Psr\Http\Message\RequestInterface;
 
@@ -46,6 +47,9 @@ class RequestTest extends \Codeception\Test\Unit
 
         $this->_messageFactory = $this->makeEmpty(RequestFactory::class, [
                 'createRequest' => new GuzzleRequest('POST', 'foo.com'), ]);
+
+        // create an empty trait mock since $this->_request has an empty `getRequestFactory`
+        $this->_bareRequest = $this->tester->mockTrait(Request::class);
     }
 
     /**
@@ -108,22 +112,48 @@ class RequestTest extends \Codeception\Test\Unit
      */
     public function testRequestFactory()
     {
-        // create an empty trait mock since $this->_request has an empty `getRequestFactory`
-        $request = $this->tester->mockTrait(Request::class);
+        $this->tester->setProperty($this->_bareRequest, 'requestFactory', null);
 
-        Stub::update($request, [
-            'requestFactory' => null,
-        ]);
-
-        $factory = ReflectionHelper::invokePrivateMethod($request, 'getRequestFactory');
+        $factory = ReflectionHelper::invokePrivateMethod($this->_bareRequest, 'getRequestFactory');
 
         verify($factory)->isInstanceOf(RequestFactory::class);
 
-        Stub::update($request, [
-            'requestFactory' => $this->_messageFactory,
-        ]);
+        $this->tester->setProperty($this->_bareRequest, 'requestFactory', $this->_messageFactory);
 
-        $factory = ReflectionHelper::invokePrivateMethod($request, 'getRequestFactory');
+        $factory = ReflectionHelper::invokePrivateMethod($this->_bareRequest, 'getRequestFactory');
+
+        verify($factory)->equals($this->_messageFactory);
+    }
+
+    /**
+     * Test that a RequestFactory is discovered when calling `setRequestFactory()`
+     *
+     * @covers ::setRequestFactory
+     */
+    public function testSetRequestFactorySetsFactoryWhenCalled()
+    {
+        // Try to discover a RequestFactory
+        $this->_bareRequest->setRequestFactory();
+
+        $factory = ReflectionHelper::readPrivateProperty($this->_bareRequest, 'requestFactory');
+
+        // MessageFactoryDiscovery should find the Guzzle PSR7 implementation included with these tests
+        verify($factory)->isInstanceOf(GuzzleMessageFactory::class);
+    }
+
+    /**
+     * Test that we properly assign a MessageFactory when passed to `setRequestFactory()`
+     *
+     * @covers ::setRequestFactory
+     */
+    public function testSetRequestFactorySetsFactoryWhenOneIsPassed()
+    {
+        // Try to discover a MessageFactory
+        $this->_bareRequest->setRequestFactory($this->_messageFactory);
+
+        $factory = ReflectionHelper::readPrivateProperty($this->_bareRequest, 'requestFactory');
+
+        verify($factory)->isInstanceOf(RequestFactory::class);
 
         verify($factory)->equals($this->_messageFactory);
     }

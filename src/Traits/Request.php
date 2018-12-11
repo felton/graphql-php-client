@@ -67,7 +67,21 @@ trait Request
      */
     protected function getRequestFactory() : RequestFactory
     {
-        return $this->requestFactory ?? MessageFactoryDiscovery::find();
+        if (!($this->requestFactory instanceof RequestFactory)) {
+            $this->setRequestFactory();
+        }
+
+        return $this->requestFactory;
+    }
+
+    /**
+     * Sets or discovers a new RequestFactory
+     *
+     * @param RequestFactory|null $requestFactory request factory
+     */
+    public function setRequestFactory(RequestFactory $requestFactory = null)
+    {
+        $this->requestFactory = $requestFactory ?: MessageFactoryDiscovery::find();
     }
 
     /**

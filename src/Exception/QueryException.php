@@ -19,6 +19,11 @@ class QueryException extends \RuntimeException
      */
     protected $successfulData = [];
 
+    /**
+     * Body of the response
+     *
+     * @var string
+     */
     protected $responseBody = '';
 
     /**
