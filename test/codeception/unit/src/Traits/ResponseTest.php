@@ -2,12 +2,12 @@
 
 namespace GraphQLClient\Tests\Traits;
 
-use GraphQLClient\Traits\Response as ResponseTrait;
-use Psr\Http\Message\ResponseInterface;
-use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Codeception\Util\ReflectionHelper;
-use GuzzleHttp\Psr7\Request as GuzzleRequest;
 use Codeception\Util\Stub;
+use GraphQLClient\Traits\Response as ResponseTrait;
+use GuzzleHttp\Psr7\Request as GuzzleRequest;
+use GuzzleHttp\Psr7\Response as GuzzleResponse;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * @coversDefaultClass GraphQLClient\Traits\Response
@@ -22,7 +22,7 @@ class ResponseTest extends \Codeception\Test\Unit
     protected $tester;
 
     /**
-     * Mocked Response class
+     * Mocked class that uses Response trait
      *
      * @var object
      */

@@ -56,9 +56,8 @@ trait Response
             if ($errors = $responseJSON['errors'] ?? false) {
                 // throw an exception with errors and any other successful data
                 // returned before the error occurred, if any
-                throw new QueryException($errors, $successfulData);
+                throw new QueryException($errors, $successfulData, $responseBody);
             }
-
             return $json ? $successfulData : $responseBody;
         }
 

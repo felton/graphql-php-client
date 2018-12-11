@@ -2,12 +2,13 @@
 
 namespace GraphQLClient\Tests\Traits;
 
+use Codeception\Util\ReflectionHelper;
+use Codeception\Util\Stub;
 use GraphQLClient\Traits\Request;
 use GuzzleHttp\Psr7\Request as GuzzleRequest;
+use Http\Message\MessageFactory\GuzzleMessageFactory;
+use Http\Message\RequestFactory;
 use Psr\Http\Message\RequestInterface;
-use \Http\Message\MessageFactory;
-use Codeception\Util\Stub;
-use Codeception\Util\ReflectionHelper;
 
 /**
  * @coversDefaultClass GraphQLClient\Traits\Request
@@ -22,14 +23,14 @@ class RequestTest extends \Codeception\Test\Unit
     protected $tester;
 
     /**
-     * Mocked Request class
+     * Mocked class that uses Request trait
      *
      * @var object
      */
     protected $_request;
 
     /**
-     * Mocked MessageFactory
+     * Mocked RequestFactory
      *
      * @var object
      */
@@ -40,12 +41,15 @@ class RequestTest extends \Codeception\Test\Unit
      */
     protected function _before()
     {
-        $this->_request = $this->getMockBuilder(Request::class)
-                               ->setMethods(['getMessageFactory', 'getOptions'])
-                               ->getMockForTrait();
+        $this->_request = $this->tester->mockTrait(Request::class, [
+            'getRequestFactory', 'getOptions', 'encodeJson', 'getStreamFactory',
+        ]);
 
-        $this->_messageFactory = $this->makeEmpty(MessageFactory::class, [
+        $this->_messageFactory = $this->makeEmpty(RequestFactory::class, [
                 'createRequest' => new GuzzleRequest('POST', 'foo.com'), ]);
+
+        // create an empty trait mock since $this->_request has an empty `getRequestFactory`
+        $this->_bareRequest = $this->tester->mockTrait(Request::class);
     }
 
     /**
@@ -55,21 +59,33 @@ class RequestTest extends \Codeception\Test\Unit
      */
     public function testbuildRequestBuildsRequest()
     {
-        $request = $this->_request;
+        $options = ['request' => ['method' => 'POST', 'headers' => ['header1' => 'bar']]];
+
+        $streamFactory = $this->makeEmpty(\Http\Message\StreamFactory::class, [
+                'createStream' => \GuzzleHttp\Psr7\stream_for('some-data'), ]);
 
         // setting method return values using PHPUnit since mixing with Stub::update causes issues
-        $request->expects($this->any())
+        $this->_request->expects($this->any())
             ->method('getOptions')
-            ->will($this->returnValue(['method' => 'POST', 'headers' => ['header1' => 'bar']]));
+            ->will($this->returnValue($options));
 
-        Stub::update($request, [
+        /*
+         * Mock the rest using `Stub::update`
+         * This shouldn't completely work, but the code above might have fixed something.
+         * @todo Investigate this.
+         */
+        Stub::update($this->_request, [
             'url' => 'foo.com',
-            'getMessageFactory' => $this->_messageFactory,
+            'encodeJson' => self::Once(),
+            'getRequestFactory' => $this->_messageFactory,
+            'getStreamFactory' => $streamFactory,
         ]);
 
-        $r = $request->buildRequest(['foo']);
+        $request = $this->_request->buildRequest(['some-data']);
 
-        verify($r)->isInstanceOf(RequestInterface::class);
+        verify($request)->isInstanceOf(RequestInterface::class);
+
+        verify($request->getBody()->getContents())->equals('some-data');
     }
 
     /**
@@ -81,40 +97,63 @@ class RequestTest extends \Codeception\Test\Unit
      */
     public function testBuildRequestThrowsOnGET()
     {
-        $request = $this->_request;
-
         // setting method return values using PHPUnit since mixing with Stub::update causes issues
-        $request->expects($this->any())
+        $this->_request->expects($this->any())
             ->method('getOptions')
-            ->will($this->returnValue(['method' => 'GET']));
+            ->will($this->returnValue(['request' => ['method' => 'GET']]));
 
-        $request->buildRequest(['foo']);
+        $this->_request->buildRequest(['foo']);
     }
 
     /**
-     * Test that we return a messageFactory
+     * Test that we return a RequestFactory
      *
-     * @covers ::getMessageFactory
+     * @covers ::getRequestFactory
      */
-    public function testMessageFactory()
+    public function testRequestFactory()
     {
-        // create empty trait mock since _request has an empty `getMessageFactory`
-        $request = $this->getMockBuilder(Request::class)
-                               ->getMockForTrait();
+        $this->tester->setProperty($this->_bareRequest, 'requestFactory', null);
 
-        Stub::update($request, [
-            'messageFactory' => null,
-        ]);
+        $factory = ReflectionHelper::invokePrivateMethod($this->_bareRequest, 'getRequestFactory');
 
-        $factory = ReflectionHelper::invokePrivateMethod($request, 'getMessageFactory');
+        verify($factory)->isInstanceOf(RequestFactory::class);
 
-        verify($factory)->isInstanceOf(MessageFactory::class);
+        $this->tester->setProperty($this->_bareRequest, 'requestFactory', $this->_messageFactory);
 
-        Stub::update($request, [
-            'messageFactory' => $this->_messageFactory,
-        ]);
+        $factory = ReflectionHelper::invokePrivateMethod($this->_bareRequest, 'getRequestFactory');
 
-        $factory = ReflectionHelper::invokePrivateMethod($request, 'getMessageFactory');
+        verify($factory)->equals($this->_messageFactory);
+    }
+
+    /**
+     * Test that a RequestFactory is discovered when calling `setRequestFactory()`
+     *
+     * @covers ::setRequestFactory
+     */
+    public function testSetRequestFactorySetsFactoryWhenCalled()
+    {
+        // Try to discover a RequestFactory
+        $this->_bareRequest->setRequestFactory();
+
+        $factory = ReflectionHelper::readPrivateProperty($this->_bareRequest, 'requestFactory');
+
+        // MessageFactoryDiscovery should find the Guzzle PSR7 implementation included with these tests
+        verify($factory)->isInstanceOf(GuzzleMessageFactory::class);
+    }
+
+    /**
+     * Test that we properly assign a MessageFactory when passed to `setRequestFactory()`
+     *
+     * @covers ::setRequestFactory
+     */
+    public function testSetRequestFactorySetsFactoryWhenOneIsPassed()
+    {
+        // Try to discover a MessageFactory
+        $this->_bareRequest->setRequestFactory($this->_messageFactory);
+
+        $factory = ReflectionHelper::readPrivateProperty($this->_bareRequest, 'requestFactory');
+
+        verify($factory)->isInstanceOf(RequestFactory::class);
 
         verify($factory)->equals($this->_messageFactory);
     }
