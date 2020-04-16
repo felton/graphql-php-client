@@ -2,9 +2,6 @@ language: php
 
 php:
   - 7.1
-  - 7.2
-  - 7.3
-  - 7.4
 
 cache:
   directories:
@@ -22,6 +19,14 @@ script:
   - composer build
   - phpenv config-add /tmp/xdebug.ini # reenable xdebug for coverage
   - composer coverage-xml
+  - /bin/false
+
+jobs:
+  include:
+    - stage: Deploy
+      name: 'Deploy to Packagist'
+      script:
+        - echo "Deploy Me"
 
 after_success:
   - bash <(curl -s https://codecov.io/bash) -f ./test/codeception/_output/coverage.xml
